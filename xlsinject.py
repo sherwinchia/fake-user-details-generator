@@ -5,19 +5,20 @@ import calendar
 from datetime import datetime, timedelta
 
 def main():
+    totalData = 100
     workbook = xlsxwriter.Workbook("GFormBotData.xlsx")
     worksheet = workbook.add_worksheet("Sheet1")
     rowIndex = 8
-    for row in range(10000):
+    for row in range(totalData):
         day,month,year = raw_dob_generator()
-        gender = random.choice(["male","female"])
+        userGender = random.choice(["male","female"])
 
-        worksheet.write('A'+str(rowIndex), name_generator(names.get_first_name(), gender))
+        worksheet.write('A'+str(rowIndex), name_generator(names.get_first_name(gender=userGender), userGender))
         worksheet.write('B'+str(rowIndex), dob_generator(day,month,year))
         worksheet.write('C'+str(rowIndex), age_generator(year))
         worksheet.write('D'+str(rowIndex), nik_generator(day + month + str(year)))
         worksheet.write('E'+str(rowIndex), phone_generator())
-        worksheet.write('F'+str(rowIndex), status_generator(gender))
+        worksheet.write('F'+str(rowIndex), status_generator(userGender))
         worksheet.write('G'+str(rowIndex), checkbox_generator())
         rowIndex += 1
 
@@ -67,7 +68,7 @@ def dob_generator(day,month,year):
 def status_generator(gender):
     status = ""
     if (gender == "male"):
-        status = random.choice([  "Porter", "Bengkel", "Montir", "Kerja","Asisten Rumah Tangga","Kuli","ART","Kuliah","Pensiun","Pengangguran","Guru", "Tidak bekerja", "Sales","IT","Petani","Wiraswasta","Ilmuwan","Satpam", "Nelayan", "Sopir", "Perawat","Teknisi","Jualan","Kerja di pasar","Porter", "Bengkel", "Montir", "Kerja","Asisten Rumah Tangga","Kuli","ART","Kuliah","Pensiun","Pengangguran","Guru", "Tidak bekerja", "Sales","IT","Petani","Wiraswasta","Ilmuwan","Satpam", "Nelayan", "Sopir", "Perawat","Teknisi","Jualan","Kerja di pasar","Porter", "Bengkel", "Montir", "Kerja","Asisten Rumah Tangga","Kuli","ART","Kuliah","Pensiun","Pengangguran","Guru", "Tidak bekerja", "Sales","IT","Petani","Wiraswasta","Ilmuwan","Satpam", "Nelayan", "Sopir", "Perawat","Teknisi","Jualan","Kerja di pasar", "Farmasi","Arsitek","Akuntan","Respsionis","Toko", "Bidan","Pengacara", "Programmer", "Peternak", "Tukang", "Jual koran", "Pramusaji","Penulis", "Dokter", "Pramusaji", "Pramusaji", "Pramusaji" ,"Anak Mafia", "Presiden"])
+        status = random.choice(["Porter", "Bengkel", "Montir", "Kerja","Asisten Rumah Tangga","Kuli","ART","Kuliah","Pensiun","Pengangguran","Guru", "Tidak bekerja", "Sales","IT","Petani","Wiraswasta","Ilmuwan","Satpam", "Nelayan", "Sopir", "Perawat","Teknisi","Jualan","Kerja di pasar","Porter", "Bengkel", "Montir", "Kerja","Asisten Rumah Tangga","Kuli","ART","Kuliah","Pensiun","Pengangguran","Guru", "Tidak bekerja", "Sales","IT","Petani","Wiraswasta","Ilmuwan","Satpam", "Nelayan", "Sopir", "Perawat","Teknisi","Jualan","Kerja di pasar","Porter", "Bengkel", "Montir", "Kerja","Asisten Rumah Tangga","Kuli","ART","Kuliah","Pensiun","Pengangguran","Guru", "Tidak bekerja", "Sales","IT","Petani","Wiraswasta","Ilmuwan","Satpam", "Nelayan", "Sopir", "Perawat","Teknisi","Jualan","Kerja di pasar", "Farmasi","Arsitek","Akuntan","Respsionis","Toko", "Bidan","Pengacara", "Programmer", "Peternak", "Tukang", "Jual koran", "Pramusaji","Penulis", "Dokter", "Pramusaji", "Pramusaji", "Pramusaji" ,"Anak Mafia", "Presiden"])
     else:
         status = random.choice(["Ibu Rumah Tangga","Asisten Rumah Tangga", "Pramusaji", "Pramusaji", "Peternak", "Tukang", "Porter", "Bengkel", "Montir", "Kerja", "Dokter","Asisten Rumah Tangga","Kuli","ART","Kuliah","Pensiun","Pengangguran","Guru", "Tidak bekerja", "Sales","IT","Petani","Ibu Rumah Tangga","Asisten Rumah Tangga", "Peternak", "Tukang", "Porter", "Bengkel", "Montir", "Kerja", "Dokter","Asisten Rumah Tangga","Kuli","ART","Kuliah","Pensiun","Pengangguran","Guru", "Tidak bekerja", "Sales","IT","Petani","Ibu Rumah Tangga","Asisten Rumah Tangga", "Peternak", "Tukang", "Porter", "Bengkel", "Montir", "Kerja", "Dokter","Asisten Rumah Tangga","Kuli","ART","Kuliah","Pensiun","Pengangguran","Guru", "Tidak bekerja", "Sales","IT","Petani","Wiraswasta","Ilmuwan","Satpam", "Nelayan", "Sopir", "Perawat","Teknisi","Jualan","Kerja di pasar","Farmasi","Arsitek","Akuntan","Respsionis","Toko", "Bidan","Pengacara", "Programmer", "Penulis", "Jual koran", "Pramusaji","Anak Mafia", "Presiden"])
 
