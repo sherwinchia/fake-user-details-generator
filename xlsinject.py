@@ -8,14 +8,24 @@ import json
 import os
 from datetime import datetime, timedelta
 from selenium import webdriver
+import requests
+from bs4 import BeautifulSoup
+import concurrent.futures
+from selenium.webdriver.common.proxy import Proxy, ProxyType
+import urllib.request , socket
+from itertools import cycle
+import traceback
 
 def main():
     #read JSON data
     json_file = open("data.json")
     json_array = json.load(json_file)
-
+    
     #set global variables
-    global male_names, female_names,occupations,non_male_occupations
+    global male_names, female_names,occupations,non_male_occupations, proxy_list
+    proxy_list = getProxies()
+
+
     male_names = json_array['malenames']
     female_names = json_array['femalenames']
     occupations = json_array['occupations']
@@ -78,6 +88,7 @@ def generate_excel():
         worksheet.write('E'+str(rowIndex), phonenumber)
         worksheet.write('F'+str(rowIndex), occupation)
         worksheet.write('G'+str(rowIndex), option)
+        worksheet.write('H'+str(rowIndex), random.choice(proxy_list))
         rowIndex += 1
     workbook.close()
 
@@ -86,62 +97,96 @@ def generate_excel():
 def inject_directly():
     totalData = input("Select number of data to be injected: ")
     googleFormLink = "https://docs.google.com/forms/d/e/1FAIpQLScajZqdye35dJpi0abhiuyX51C50XLAo6ZahOQTN37_zX5cjg/viewform"
-    for x in range (int(totalData)):
-        user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36"
-        options  = webdriver.ChromeOptions()
-        options.headless = True
-        options.add_argument(f'user-agent={user_agent}')
-        options.add_argument("--window-size=1920,1080")
-        options.add_argument('--ignore-certificate-errors')
-        options.add_argument('--allow-running-insecure-content')
-        options.add_argument("--disable-extensions")
-        options.add_argument("--proxy-server='direct://'")
-        options.add_argument("--proxy-bypass-list=*")
-        options.add_argument("--start-maximized")
-        options.add_argument('--disable-gpu')
-        options.add_argument('--disable-dev-shm-usage')
-        options.add_argument('--no-sandbox')
-        options.add_argument("-incognito")
-        browser = webdriver.Chrome(executable_path="D:/Coding/Python/chromedriver.exe", options=options)
-        browser.get(googleFormLink)
-        time.sleep(2) 
-        name, dob, age, nik, phonenumber, occupation, option = generate_data()
-        nama = browser.find_element_by_xpath("//*[@id='mG61Hd']/div[2]/div/div[2]/div[1]/div/div/div[2]/div/div[1]/div[2]/textarea")
-        nama.send_keys(name)
-        tanggalLahir = browser.find_element_by_xpath("//*[@id='mG61Hd']/div[2]/div/div[2]/div[2]/div/div/div[2]/div/div[1]/div[2]/textarea")
-        tanggalLahir.send_keys(dob)
-        umur = browser.find_element_by_xpath("//*[@id='mG61Hd']/div[2]/div/div[2]/div[3]/div/div/div[2]/div/div[1]/div[2]/textarea")
-        umur.send_keys(age)
-        nik = browser.find_element_by_xpath("//*[@id='mG61Hd']/div[2]/div/div[2]/div[4]/div/div/div[2]/div/div[1]/div[2]/textarea")
-        nik.send_keys(nik)
-        nomorHp = browser.find_element_by_xpath("//*[@id='mG61Hd']/div[2]/div/div[2]/div[5]/div/div/div[2]/div/div[1]/div[2]/textarea")
-        nomorHp.send_keys(phonenumber)
-        toko = browser.find_element_by_xpath("//*[@id='mG61Hd']/div[2]/div/div[2]/div[6]/div/div/div[2]/div/div[1]/div[2]/textarea")
-        toko.send_keys(occupation)
-        checkboxes = browser.find_elements_by_class_name("appsMaterialWizTogglePapercheckboxCheckbox")       
-        time.sleep(1) 
-        if(option == 1):
-            checkboxes[0].click()
-        else:
-            checkboxes[1].click()
-        submitButton = browser.find_element_by_xpath("//*[@id='mG61Hd']/div[2]/div/div[3]/div[1]/div/div")
-        time.sleep(1)
-        submitButton.click()
+    
+    # PROXY = random.choice(proxy_list)
+    # proxy_ip_port = "201.91.82.155:3128"
+    # proxy_ip_port = random.choice(proxy_list)
+    proxy_ip_port = "36.37.160.242:8080"
 
-        browser.close()
+    proxy = Proxy()
+    proxy.proxy_type = ProxyType.MANUAL
+    proxy.http_proxy = proxy_ip_port
+    proxy.ssl_proxy = proxy_ip_port
 
-        print(
-            "==================================" + "\n"
-            "Injected Data Count :" + str(int(user_option)+1) + "\n"
-            "==================================" +"\n"
-            "NIK       : " + str(nik) + "\n"
-            "Nama      : " + name + "\n"
-            "DOB       : " + dob + "\n"
-            "Umur      : " + str(age) + "\n"
-            "No HP     : " + str(phonenumber) + "\n"
-            "Pekerjaan : " + occupation + "\n"
-        )
-    input("Data Injected. Press Enter to continue...")
+    capabilities = webdriver.DesiredCapabilities.CHROME
+    proxy.add_to_capabilities(capabilities)
+
+    user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36"
+    options  = webdriver.ChromeOptions()
+    options.add_argument(f'user-agent={user_agent}')
+    options.add_argument("--window-size=1920,1080")
+    options.add_argument('--ignore-certificate-errors')
+    options.add_argument('--allow-running-insecure-content')
+    options.add_argument("--disable-extensions")
+    # options.add_argument('--proxy-server=%s' % PROXY)
+    # options.add_argument("--headless")
+    # options.add_argument("--proxy-server='direct://'")
+    # options.add_argument("--proxy-bypass-list=*")
+    # options.add_argument('--no-sandbox')
+    options.add_argument("--start-maximized")
+    options.add_argument('--disable-gpu')
+    options.add_argument('--disable-dev-shm-usage')
+    options.add_argument("-incognito")
+    browser = webdriver.Chrome(executable_path="D:/Coding/Python/chromedriver.exe", options=options, desired_capabilities=capabilities)
+    browser.get("https://whatismyipaddress.com/")
+    time.sleep(8) 
+    
+    # for x in range (int(totalData)):
+    #     user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36"
+    #     options  = webdriver.ChromeOptions()
+    #     options.headless = True
+    #     options.add_argument(f'user-agent={user_agent}')
+    #     options.add_argument("--window-size=1920,1080")
+    #     options.add_argument('--ignore-certificate-errors')
+    #     options.add_argument('--allow-running-insecure-content')
+    #     options.add_argument("--disable-extensions")
+    #     options.add_argument("--proxy-server='direct://'")
+    #     options.add_argument("--proxy-bypass-list=*")
+    #     options.add_argument("--start-maximized")
+    #     options.add_argument('--disable-gpu')
+    #     options.add_argument('--disable-dev-shm-usage')
+    #     options.add_argument('--no-sandbox')
+    #     options.add_argument("-incognito")
+    #     browser = webdriver.Chrome(executable_path="D:/Coding/Python/chromedriver.exe", options=options)
+    #     browser.get(googleFormLink)
+    #     time.sleep(2) 
+    #     name, dob, age, nik, phonenumber, occupation, option = generate_data()
+    #     nama = browser.find_element_by_xpath("//*[@id='mG61Hd']/div[2]/div/div[2]/div[1]/div/div/div[2]/div/div[1]/div[2]/textarea")
+    #     nama.send_keys(name)
+    #     tanggalLahir = browser.find_element_by_xpath("//*[@id='mG61Hd']/div[2]/div/div[2]/div[2]/div/div/div[2]/div/div[1]/div[2]/textarea")
+    #     tanggalLahir.send_keys(dob)
+    #     umur = browser.find_element_by_xpath("//*[@id='mG61Hd']/div[2]/div/div[2]/div[3]/div/div/div[2]/div/div[1]/div[2]/textarea")
+    #     umur.send_keys(age)
+    #     nik = browser.find_element_by_xpath("//*[@id='mG61Hd']/div[2]/div/div[2]/div[4]/div/div/div[2]/div/div[1]/div[2]/textarea")
+    #     nik.send_keys(nik)
+    #     nomorHp = browser.find_element_by_xpath("//*[@id='mG61Hd']/div[2]/div/div[2]/div[5]/div/div/div[2]/div/div[1]/div[2]/textarea")
+    #     nomorHp.send_keys(phonenumber)
+    #     toko = browser.find_element_by_xpath("//*[@id='mG61Hd']/div[2]/div/div[2]/div[6]/div/div/div[2]/div/div[1]/div[2]/textarea")
+    #     toko.send_keys(occupation)
+    #     checkboxes = browser.find_elements_by_class_name("appsMaterialWizTogglePapercheckboxCheckbox")       
+    #     time.sleep(1) 
+    #     if(option == 1):
+    #         checkboxes[0].click()
+    #     else:
+    #         checkboxes[1].click()
+    #     submitButton = browser.find_element_by_xpath("//*[@id='mG61Hd']/div[2]/div/div[3]/div[1]/div/div")
+    #     time.sleep(1)
+    #     submitButton.click()
+
+    #     browser.close()
+
+    #     print(
+    #         "==================================" + "\n"
+    #         "Injected Data Count :" + str(int(user_option)+1) + "\n"
+    #         "==================================" +"\n"
+    #         "NIK       : " + str(nik) + "\n"
+    #         "Nama      : " + name + "\n"
+    #         "DOB       : " + dob + "\n"
+    #         "Umur      : " + str(age) + "\n"
+    #         "No HP     : " + str(phonenumber) + "\n"
+    #         "Pekerjaan : " + occupation + "\n"
+    #     )
+    # input("Data Injected. Press Enter to continue...")
 
 def generate_data():
     day,month,year = raw_dob_generator()
@@ -215,7 +260,7 @@ def name_generator(name, gender):
     return format_string(name);
 
 def format_string(text):
-    stringFormat = numpy.random.choice([0,1], p=[0.15,0.85])
+    stringFormat = numpy.random.choice([0,1], p=[0.8,0.2])
     if (stringFormat == 1):
         return text.lower()
     else:
@@ -226,5 +271,25 @@ def clearConsole():
     if os.name in ('nt', 'dos'):  # If Machine is running on Windows, use cls
         command = 'cls'
     
+def getProxies():
+    res = requests.get('https://free-proxy-list.net')
+    content = BeautifulSoup(res.text, 'html.parser')
+    table = content.find('table')
+    rows = table.find_all('tr')
+    cols = [[col.text for col in row.find_all('td')] for row in rows]
+
+    proxies = []
+    proxy_index = 0
+
+    for col in cols:
+        try:
+            if col[4] == 'elite proxy' and col[6] == 'yes':
+                proxies.append(col[0] + ':' + col[1])
+        except:
+            pass
+    return proxies
+
+
+
 
 main()
